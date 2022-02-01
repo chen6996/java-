@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.xiangmu02.dao.UsersMapper" >
+    <!-- 自定义的方法 ,用于分页查询和条件查询 -->
+    <select id="selectAllByQuery" parameterType="com.example.xiangmu02.util.UserQuery" resultType="NewsType">
+        SELECT * FROM newstype
+        <include refid="whereSql"/>
+        LIMIT #{begin},#{pageSize}
+    </select>
+    <resultMap type="News" id="baseResultMap">
+        <id column="newsId" jdbcType="INTEGER" property="newsId" />
+        <result column="newsTitle" jdbcType="VARCHAR"  property="newsTitle" />
+        <result column="newsContent" jdbcType="VARCHAR" property="newsContent" />
+        <result column="createTime" jdbcType="DATE" property="createTime" />
+        <result column="newsTypeId" jdbcType="INTEGER" property="newsTypeId" />
+        <!-- 一对一 -->
+        <association property="newsType" javaType="NewsType">
+            <id column="newsTypeId" jdbcType="INTEGER" property="newsTypeId" />
+            <result column="newsTypeName" jdbcType="VARCHAR"  property="newsTypeName" />
+            <result column="newsTypeExplain" jdbcType="VARCHAR"  property="newsTypeExplain" />
+            <result column="createTime" jdbcType="DATE"  property="createTime" />
+        </association>
+    </resultMap>
+    <select id="selectAllByQuery2" parameterType="com.example.xiangmu02.util.UserQuery" resultMap="baseResultMap">
+        SELECT * FROM news n,newstype p
+        where n.newsTypeId = p.newsTypeId
+        <if test="name!=null and name!=''">
+            AND newsTitle LIKE CONCAT("%",#{name},"%")
+        </if>
+        <if test="be!=null and be!=''">
+            AND newsContent LIKE CONCAT("%",#{be},"%")
+        </if>
+        LIMIT #{begin},#{pageSize}
+    </select>
+    <select id="selectCountByQuery" resultType="long">
+        SELECT COUNT(*) FROM  newstype
+        <include refid="whereSql"/>
+    </select>
+    <select id="selectCountByQuery2" resultType="long">
+        SELECT COUNT(*) FROM  news
+        <include refid="whereSql2"/>
+    </select>
+    <sql id="whereSql">
+        <where>
+            <if test="name!=null and name!=''">
+                AND newsTypeName LIKE CONCAT("%",#{name},"%")
+            </if>
+        </where>
+    </sql>
+    <sql id="whereSql2">
+        <where>
+            <if test="name!=null and name!=''">
+                AND newsTitle LIKE CONCAT("%",#{name},"%")
+            </if>
+            <if test="be!=null and be!=''">
+                AND newsContent LIKE CONCAT("%",#{be},"%")
+            </if>
+        </where>
+    </sql>
+    <delete id="batchDelete">
+        DELETE FROM newstype WHERE  newsTypeId IN
+        <foreach collection="list" item="i" open="(" close=")" separator=",">
+            #{i.newsTypeId}
+        </foreach>
+    </delete>
+    <delete id="batchDelete2">
+        DELETE FROM news WHERE  newsId IN
+        <foreach collection="list" item="i" open="(" close=")" separator=",">
+            #{i.newsId}
+        </foreach>
+    </delete>
+    <update id="updateNewsType" parameterType="NewsType">
+        update newstype
+        <set>
+            <if test="newsTypeName!=null"> newsTypeName=#{newsTypeName}, </if>
+            <if test="newsTypeExplain!=null"> newsTypeExplain=#{newsTypeExplain}, </if>
+            <if test="createTime!=null"> createTime=#{createTime}, </if>
+        </set>
+        where newsTypeId=#{newsTypeId}
+    </update>
+    <update id="updateNews" parameterType="News">
+        update news
+        <set>
+            <if test="newsTitle!=null"> newsTitle=#{newsTitle}, </if>
+            <if test="newsContent!=null"> newsContent=#{newsContent}, </if>
+            <if test="createTime!=null"> createTime=#{createTime}, </if>
+            <if test="newsTypeId!=null"> newsTypeId=#{newsTypeId}, </if>
+        </set>
+        where newsId=#{newsId}
+    </update>
+
+</mapper>
